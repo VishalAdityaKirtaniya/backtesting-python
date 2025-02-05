@@ -67,9 +67,9 @@ def trend_following_stop_logic(self):
 
         plt.figure(figsize=(12, 6))
         plt.plot(data.index, data['Close'], label='Close Price', color='blue', linewidth=0.3)
-        plt.plot(data.index, data['High Period'], label=f"Upper ({self.params["High Period"]}) Channel", color="green", alpha=0.7, linewidth=0.7)
+        plt.plot(data.index, data['High Period'], label=f"Upper ({self.params['High Period']}) Channel", color="green", alpha=0.7, linewidth=0.7)
         plt.plot(data.index, data['Mid Period'], label="Middle Channel", color="black", alpha=0.7, linewidth=0.3)
-        plt.plot(data.index, data['Low Period'], label=f"Lower ({self.params["Lower Period"]}) Channel", color="red", alpha=0.7, linewidth=0.7)
+        plt.plot(data.index, data['Low Period'], label=f"Lower ({self.params['Lower Period']}) Channel", color="red", alpha=0.7, linewidth=0.7)
         plt.fill_between(data.index, data["High Period"], data["Low Period"], color="lightgray", alpha=0.3)  # Shade the area between bands
         plt.scatter(buy_signals['Date'], buy_signals['Price'], label='Buy Signal', marker='^', color='green', alpha=1)
         plt.scatter(sell_signals['Date'], sell_signals['Price'], label='Sell Signal', marker='v', color='red', alpha=1)
@@ -84,12 +84,12 @@ def trend_following_stop_logic(self):
             transform=plt.gca().transAxes,  # Use axes coordinates (normalized)
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.3)  # Background for visibility
         )
-        plt.title(f'Trend Following Strategy (High Period: {self.params['High Period']}, Lower Period: {self.params['Lower Period']})')
+        plt.title(f"Trend Following Strategy (High Period: {self.params['High Period']}, Lower Period: {self.params['Lower Period']})")
         plt.legend()
         plt.tight_layout()
         # Save the figure to a file
         output_filename = f'trend_following_strategy_graph.png'
         graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-        plt.savefig(graph_path, dpi=300)
+        plt.savefig(graph_path, dpi=100)
         print(f"Plot saved to {output_filename}")
         plt.close()  # Free memory

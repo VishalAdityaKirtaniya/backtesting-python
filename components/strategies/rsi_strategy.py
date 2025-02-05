@@ -78,7 +78,7 @@ def rsi_stop_logic(self):
             transform=plt.gca().transAxes,  # Use axes coordinates (normalized)
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.3)  # Background for visibility
         )
-    plt.title(f"RSI (RSI Period: {self.params["RSI Period"]}, Overbought: {self.params["Overbought"]}, Oversold: {self.params["Oversold"]})")
+    plt.title(f"RSI (RSI Period: {self.params['RSI Period']}, Overbought: {self.params['Overbought']}, Oversold: {self.params['Oversold']})")
     plt.legend()
 
     plt.subplot(3,1,3)
@@ -93,6 +93,6 @@ def rsi_stop_logic(self):
     # Save the figure to a file
     output_filename = f'rsi_strategy_graph.png'
     graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-    plt.savefig(graph_path, dpi=300)
+    plt.savefig(graph_path, dpi=100)
     print(f"Plot saved to {output_filename}")
     plt.close()  # Free memory

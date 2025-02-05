@@ -154,13 +154,13 @@ def stochastic_stop_logic(self):
         plt.scatter(sell_signals_stochastic['Date'], sell_signals_stochastic['Stochastic'], label='Sell Signal', marker='v', color='red', alpha=1)
     plt.legend()
 
-    plt.title(f'Stochastic Oscillator Strategy, (Stochastic Period: {self.params['Stochastic Oscillator Period']}, Signal Period: {self.params['Signal Period']}, Overbought: {self.params['Overbought']}, Oversold: {self.params['Oversold']})')
+    plt.title(f"Stochastic Oscillator Strategy, (Stochastic Period: {self.params['Stochastic Oscillator Period']}, Signal Period: {self.params['Signal Period']}, Overbought: {self.params['Overbought']}, Oversold: {self.params['Oversold']})")
     plt.legend()
 
     plt.tight_layout()
     # Save the figure to a file
     output_filename = f'stochastic_strategy_graph.png'
     graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-    plt.savefig(graph_path, dpi=300)
+    plt.savefig(graph_path, dpi=100)
     print(f"Plot saved to {output_filename}")
     plt.close()  # Free memory

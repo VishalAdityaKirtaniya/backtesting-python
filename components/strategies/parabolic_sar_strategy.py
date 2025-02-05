@@ -53,11 +53,11 @@ def parabolic_sar_stop_logic(self):
     plt.scatter(data.index, data["Parabolic SAR"], label="Parabolic SAR", color="red", s=3, marker="o")
     plt.scatter(buy_signals['Date'], buy_signals['Price'], label='Buy Signal', marker='^', color='green', alpha=1)
     plt.scatter(sell_signals['Date'], sell_signals['Price'], label='Sell Signal', marker='v', color='red', alpha=1)
-    plt.title(f"Parabolic SAR (Maximum Acceleration Factor: {self.params["Maximum Acceleration Factor Period"]}, Acceleration Factor: {self.params["Acceleration Factor Period"]})")
+    plt.title(f"Parabolic SAR (Maximum Acceleration Factor: {self.params['Maximum Acceleration Factor Period']}, Acceleration Factor: {self.params['Acceleration Factor Period']})")
     plt.legend()
     # Save the figure to a file
     output_filename = f'parabolic_sar_strategy_graph.png'
     graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-    plt.savefig(graph_path, dpi=300)
+    plt.savefig(graph_path, dpi=100)
     print(f"Plot saved to {output_filename}")
     plt.close()  # Free memory

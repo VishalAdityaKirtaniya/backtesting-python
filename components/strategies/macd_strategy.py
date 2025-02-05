@@ -99,12 +99,12 @@ def macd_stop_logic(self):
         plt.scatter(buy_signals_macd['Date'], buy_signals_macd['MACD'], label='Buy Signal', marker='^', color='green', alpha=1)
     if not sell_signals_macd.empty:
         plt.scatter(sell_signals_macd['Date'], sell_signals_macd['MACD'], label='Sell Signal', marker='v', color='red', alpha=1)
-    plt.title(f'MACD and Signal Line with Buy/Sell Signals (Slow window: {self.params["Slow Window Period"]}, Fast window: {self.params["Fast Window Period"]}, Signal window: {self.params['Signal Window Period']})')
+    plt.title(f"MACD and Signal Line with Buy/Sell Signals (Slow window: {self.params['Slow Window Period']}, Fast window: {self.params['Fast Window Period']}, Signal window: {self.params['Signal Window Period']})")
     plt.legend()
     plt.tight_layout()
     # Save the figure to a file
     output_filename = f'macd_strategy_graph.png'
     graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-    plt.savefig(graph_path, dpi=300)
+    plt.savefig(graph_path, dpi=100)
     print(f"Plot saved to {output_filename}")
     plt.close()  # Free memory

@@ -52,9 +52,9 @@ def macs_stop_logic(self):
 
         plt.figure(figsize=(12, 6))
         plt.plot(data.index, data['Close'], label='Close Price', color='blue', linewidth=0.3)
-        plt.plot(data.index, data['Short MA'], label=f"Short ({self.params["Short Term"]}) MA", color="green", alpha=0.7, linewidth=0.7)
+        plt.plot(data.index, data['Short MA'], label=f"Short ({self.params['Short Term']}) MA", color="green", alpha=0.7, linewidth=0.7)
         # plt.plot(data.index, data['Mid Period'], label="Middle Channel", color="black", alpha=0.7, linewidth=0.3)
-        plt.plot(data.index, data['Long MA'], label=f"Long ({self.params["Long Term"]}) MA", color="red", alpha=0.7, linewidth=0.7)
+        plt.plot(data.index, data['Long MA'], label=f"Long ({self.params['Long Term']}) MA", color="red", alpha=0.7, linewidth=0.7)
         plt.scatter(buy_signals['Date'], buy_signals['Price'], label='Buy Signal', marker='^', color='green', alpha=1)
         plt.scatter(sell_signals['Date'], sell_signals['Price'], label='Sell Signal', marker='v', color='red', alpha=1)
         plt.text(
@@ -68,12 +68,12 @@ def macs_stop_logic(self):
             transform=plt.gca().transAxes,  # Use axes coordinates (normalized)
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.3)  # Background for visibility
         )
-        plt.title(f'Moving Average Crossover Strategy(Long Term: {self.params["Long Term"]}, Short Term: {self.params["Short Term"]})')
+        plt.title(f"Moving Average Crossover Strategy(Long Term: {self.params['Long Term']}, Short Term: {self.params['Short Term']})")
         plt.legend()
         plt.tight_layout()
         # Save the figure to a file
         output_filename = f'macs_strategy_graph.png'
         graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-        plt.savefig(graph_path, dpi=300)
+        plt.savefig(graph_path, dpi=100)
         print(f"Plot saved to {output_filename}")
         plt.close()  # Free memory

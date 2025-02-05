@@ -1,0 +1,26 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.qodo/
+
+# Ignore environment variables
+.env
+
+# Ignore virtual environments
+venv/
+.venv/
+
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore unnecessary logs
+*.log
+
+# Ignore static files if they are not required in the image
+static/

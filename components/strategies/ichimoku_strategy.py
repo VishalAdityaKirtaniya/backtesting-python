@@ -112,12 +112,12 @@ def ichimoku_stop_logic(self):
             transform=plt.gca().transAxes,  # Use axes coordinates (normalized)
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.3)  # Background for visibility
         )
-        plt.title(f'Ichimoku Clouds Strategy (Base Line: {self.params['Base Line Period']}, Conversion Line: {self.params['Conversion Line Period']}, Leading Span B: {self.params['Leading Span B Period']})')
+        plt.title(f"Ichimoku Clouds Strategy (Base Line: {self.params['Base Line Period']}, Conversion Line: {self.params['Conversion Line Period']}, Leading Span B: {self.params['Leading Span B Period']})")
         plt.legend()
         plt.tight_layout()
         # Save the figure to a file
         output_filename = f'ichimoku_clouds_strategy_graph.png'
         graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-        plt.savefig(graph_path, dpi=300)
+        plt.savefig(graph_path, dpi=100)
         print(f"Plot saved to {output_filename}")
         plt.close()  # Free memory

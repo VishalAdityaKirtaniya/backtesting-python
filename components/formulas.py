@@ -40,7 +40,7 @@ def calculate_portfolio_value(order_log_file, date_str, stock_data, cash_flows, 
         cash_flows.append(portfolio_value)  # Append the updated portfolio value to cash flows
     
     # Get the final portfolio value (after the last order)
-    final_portfolio_value = cash + (shares_owned *     stock_data['close'].iloc[-1])
+    final_portfolio_value = cash + (shares_owned * stock_data['close'].iloc[-1])
     cash_flows.append(final_portfolio_value)  # Append final portfolio value to cash flows
     
     # Now, find the price of the stock at the peak date
@@ -109,8 +109,8 @@ def calculate_metrics(strategy, initial_portfolio_value, final_portfolio_value, 
     trough_date = close_price.idxmin()  # Date of the trough value
     # peak_date_str = peak_date.strftime('%Y-%m-%d') # Convert peak date to string for comparison
     # trough_date_str = trough_date.strftime('%Y-%m-%d') # Convert trough date to string for comparison
-    portfolio_value_at_peak = calculate_portfolio_value(strategy.log_data, peak_date, stock_data, cash_flows=cash_flows, initial_portfolio_value=initial_portfolio_value)
-    portfolio_value_at_trough = calculate_portfolio_value(strategy.log_data, trough_date, stock_data, cash_flows=cash_flows, initial_portfolio_value=initial_portfolio_value)
+    portfolio_value_at_peak = calculate_portfolio_value(strategy.log_data, peak_date, stock_data, cash_flows, initial_portfolio_value=initial_portfolio_value)
+    portfolio_value_at_trough = calculate_portfolio_value(strategy.log_data, trough_date, stock_data, cash_flows, initial_portfolio_value=initial_portfolio_value)
     # print('portfolio value at peak: ',portfolio_value_at_peak)
     # print('portfolio value at trough: ',portfolio_value_at_trough)
 

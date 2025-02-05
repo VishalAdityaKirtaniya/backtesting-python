@@ -46,15 +46,15 @@ def bollingerband_next_logic(self):
 
 def bollingerband_stop_logic(self):
         # This method is used for visualization after the strategy finishes
-        print(f"Upper band: {self.bb.lines.top.array}")
+        # print(f"Upper band: {self.bb.lines.top.array}")
         data = pd.DataFrame({
             'Close': self.data.close.array,
             'Upper Band': self.bb.lines.top.array,
             'Lower Band': self.bb.lines.bot.array
         }, index=self.data.datetime.array)
-        print(f"before line 203: {data.index}")
+        # print(f"before line 203: {data.index}")
         data.index = pd.to_datetime(data.index.map(lambda x: datetime.fromordinal(int(x)) + timedelta(days=x % 1)))
-        print(f"after line 203: {data.index}")
+        # print(f"after line 203: {data.index}")
 
         # Extract buy and sell signal data points
         buy_signals = pd.DataFrame([entry for entry in self.log_data if entry['Type'] == 'BUY'], columns=['Date', 'Price', 'Type'])
@@ -86,6 +86,6 @@ def bollingerband_stop_logic(self):
         # Save the figure to a file
         output_filename = f'bollinger_band_strategy_graph.png'
         graph_path = os.path.join(UPLOAD_FOLDER, output_filename)
-        plt.savefig(graph_path, dpi=300)
+        plt.savefig(graph_path, dpi=100)
         print(f"Plot saved to {output_filename}")
         plt.close()  # Free memory

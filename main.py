@@ -36,26 +36,17 @@ def backtest():
 
     # Fetch stock data and interval
     stock_data = fetch_stock_data(stock_symbol, start_date, interval)
-    # stock_data = yf.download("RELIANCE.NS", start="2023-01-01")
-    stock_data.columns = stock_data.columns.droplevel(0)  # Remove multi-index column level
-    stock_data.columns = ['close', 'high', 'low', 'open', 'volume']
-    stock_data.index.name = 'datetime'
     data_feed = bt.feeds.PandasData(dataname=stock_data)
     print(f'stock data: {stock_data}')
-
-
     results = []
-
     param_names, param_combinations = get_parameter_combinations(strategy_name)
     # Filter invalid parameter combinations before running
     valid_combinations = [
         dict(zip(param_names, combo)) for combo in param_combinations if combo[0] > combo[1]
     ]
-
     # Add 'Trade Size' to each parameter set
     for params in valid_combinations:
         params['Trade Size'] = trade_size  # Ensure trade size is included
-
     with concurrent.futures.ProcessPoolExecutor() as executor:
         futures = {
             executor.submit(
@@ -65,32 +56,27 @@ def backtest():
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             results.append(result)
-
     # Convert log data to a DataFrame and save to CSV 
     log_df = pd.DataFrame(results)
     # print(log_df)
     csv_robustness = f'robustness_test_{strategy_name}.csv'
     csv_path = os.path.join(UPLOAD_FOLDER, csv_robustness)
     log_df.to_csv(csv_path, index=False)
-    
 
     # Sort the results list in descending order based on Portfolio Value (convert to float for correct sorting)
     sorted_results = sorted(results, key=lambda x: float(x["Portfolio Value"]), reverse=True)
 
     highest_result = sorted_results[0]
     exclude_keys = {"Win Rate", "Sharpe Ratio", "Max Drawdown", "IRR", "Portfolio Value"}
-    filtered_params = {key: value for key, value in highest_result.items() if key not in exclude_keys}
-
-    # Extract the params used for the highest portfolio value
-    best_params = filtered_params
+    best_params = {key: value for key, value in highest_result.items() if key not in exclude_keys}
     print("Best Params:", best_params)
 
     cerebro = bt.Cerebro()
     cerebro.adddata(data_feed)
     cerebro.broker.setcash(initial_portfolio_value)
     Graph = create_strategy_class(strategy_name=strategy_name, stop_logic='stop_logic')
-    cerebro.addstrategy(Graph, params=filtered_params)
-    strategy = cerebro.run()[0]
+    cerebro.addstrategy(Graph, params=best_params)
+    cerebro.run()[0]
 
     # Check if the file exists
     csv_trade_log = f'static/files/trade_log_{strategy_name}.csv'
@@ -145,9 +131,6 @@ def execute_strategies():
     interval = '1d'
 
     stock_data = fetch_stock_data(stock_symbol, start_date, interval)
-    # stock_data = yf.download("RELIANCE.NS", start="2023-01-01")
-    stock_data.columns = ['open', 'high', 'low', 'close', 'volume']
-    stock_data.index.name = 'datetime'
     data_feed = bt.feeds.PandasData(dataname=stock_data)
     print(f'stock data: {stock_data}')
 

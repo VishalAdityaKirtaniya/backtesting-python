@@ -37,10 +37,10 @@ def parabolic_sar_stop_logic(self):
         'Close': self.data.close.array,
         'Parabolic SAR': self.sar.array,
      }, index=self.data.datetime.array)
-    print(data)
+    # print(data)
 
     data.index = pd.to_datetime(data.index.map(lambda x: datetime.fromordinal(int(x)) + timedelta(days=x % 1)))
-    print(data.index)
+    # print(data.index)
 
     # data = data.dropna(subset=['Leading Span A', 'Leading SpanB'])
 

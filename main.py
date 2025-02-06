@@ -70,7 +70,6 @@ def backtest():
     exclude_keys = {"Win Rate", "Sharpe Ratio", "Max Drawdown", "IRR", "Portfolio Value"}
     best_params = {key: value for key, value in highest_result.items() if key not in exclude_keys}
     print("Best Params:", best_params)
-
     cerebro = bt.Cerebro()
     cerebro.adddata(data_feed)
     cerebro.broker.setcash(initial_portfolio_value)

@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import matplotlib
 matplotlib.use("Agg")  # Use non-GUI backend
 import matplotlib.pyplot as plt
-import numpy as np
 import os
 
 from components.folder_name import UPLOAD_FOLDER
@@ -41,10 +40,10 @@ def rsi_stop_logic(self):
         'Close': self.data.close.array,
         'RSI': self.rsi.array,
     }, index=self.data.datetime.array)
-    print(data)
+    # print(data)
 
     data.index = pd.to_datetime(data.index.map(lambda x: datetime.fromordinal(int(x)) + timedelta(days=x % 1)))
-    print(data.index)
+    # print(data.index)
 
     data = data.dropna(subset=['RSI'])
     logged_trade_dates = {entry['Date'] for entry in self.log_data}

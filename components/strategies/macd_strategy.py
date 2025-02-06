@@ -52,7 +52,6 @@ def macd_stop_logic(self):
 
     data = data.dropna(subset=['MACD'])
     logged_trade_dates = {entry['Date'] for entry in self.log_data}
-    print(f"logged_trade_dates: {logged_trade_dates}")
 
     # Extract buy and sell signal data points
     buy_signals = pd.DataFrame([entry for entry in self.log_data if entry['Type'] == 'BUY'], columns=['Date', 'Price', 'Type'])

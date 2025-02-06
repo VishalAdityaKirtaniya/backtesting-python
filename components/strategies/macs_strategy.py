@@ -41,10 +41,10 @@ def macs_stop_logic(self):
             'Short MA': self.short_ma.array,
             'Long MA': self.long_ma.array,
         }, index=self.data.datetime.array)
-        print(data)
+        # print(data)
 
         data.index = pd.to_datetime(data.index.map(lambda x: datetime.fromordinal(int(x)) + timedelta(days=x % 1)))
-        print(data.index)
+        # print(data.index)
 
         # Extract buy and sell signal data points
         buy_signals = pd.DataFrame([entry for entry in self.log_data if entry['Type'] == 'BUY'], columns=['Date', 'Price', 'Type'])

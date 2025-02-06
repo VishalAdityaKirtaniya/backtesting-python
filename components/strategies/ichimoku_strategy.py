@@ -55,10 +55,10 @@ def ichimoku_stop_logic(self):
             'Leading Span A': self.lines.leading_span_a.array,
             'Leading Span B': self.lines.leading_span_b.array,
         }, index=self.data.datetime.array)
-        print(data)
+        # print(data)
 
         data.index = pd.to_datetime(data.index.map(lambda x: datetime.fromordinal(int(x)) + timedelta(days=x % 1)))
-        print(data.index)
+        # print(data.index)
 
         data = data.dropna(subset=['Leading Span A', 'Leading Span B'])
 

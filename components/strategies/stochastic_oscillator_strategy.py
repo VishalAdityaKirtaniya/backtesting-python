@@ -116,37 +116,6 @@ def stochastic_stop_logic(self):
         self.params['Oversold'], self.params['Overbought'], 
         color='grey', alpha=0.3
     )
-    print(f'stochastic_buy: {self.stochastic_buy}')
-    print(f'log_data: {self.log_data}')
-    # if self.stochastic_buy:
-    #     buy_signals_stochastic_filtered = [
-    #         entry for entry in self.stochastic_buy if entry['Date'] in logged_trade_dates
-    #     ]
-    #     if buy_signals_stochastic_filtered:
-    #         buy_signals_stochastic_df = pd.DataFrame(buy_signals_stochastic_filtered)
-    #         plt.scatter(
-    #             buy_signals_stochastic_df['Date'], 
-    #             buy_signals_stochastic_df['Stochastic'], 
-    #             label='Buy Signal', 
-    #             marker='^', 
-    #             color='green', 
-    #             alpha=1
-    #         )
-    
-    # if self.stochastic_sell:
-    #     sell_signals_stochastic_filtered = [
-    #         entry for entry in self.stochastic_sell if entry['Date'] in logged_trade_dates
-    #     ]
-    #     if sell_signals_stochastic_filtered:
-    #         sell_signals_stochastic_df = pd.DataFrame(buy_signals_stochastic_filtered)
-    #         plt.scatter(
-    #             sell_signals_stochastic_df['Date'], 
-    #             sell_signals_stochastic_df['Stochastic'], 
-    #             label='Buy Signal', 
-    #             marker='^', 
-    #             color='green', 
-    #             alpha=1
-    #         )
 
     if not buy_signals_stochastic.empty:
         plt.scatter(buy_signals_stochastic['Date'], buy_signals_stochastic['Stochastic'], label='Buy Signal', marker='^', color='green', alpha=1)

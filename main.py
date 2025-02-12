@@ -10,13 +10,13 @@ from components.folder_name import UPLOAD_FOLDER
 import base64
 import concurrent
 import time
+from datetime import datetime
 
 app = Flask(__name__)
 
 CORS(app) # Enable CORS for all routes
 
-# Ensure the directory for saving files exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True) # Ensure the directory for saving files exists
 
 @app.route('/backtest', methods=['POST'])
 def backtest():
@@ -25,6 +25,7 @@ def backtest():
     from components.fetch_data import fetch_stock_data
     from components.parameter_combinations import get_parameter_combinations
     from components.backtrader_sync import run_backtrader_sync
+    from components.formulas import calculate_metrics, calculate_cash_flows
     data = request.json
     print(data)
     strategy_name = data.get('strategy_name', 'macd')
@@ -75,7 +76,19 @@ def backtest():
     cerebro.broker.setcash(initial_portfolio_value)
     Graph = create_strategy_class(strategy_name=strategy_name, stop_logic='stop_logic')
     cerebro.addstrategy(Graph, params=best_params)
-    cerebro.run()[0]
+    strategy = cerebro.run()[0]
+
+    # Calculate cash flows
+    cash_flows = calculate_cash_flows(strategy.log_data, initial_portfolio_value, stock_data)
+    # print(f"Cash flow: {cash_flows}")
+    irr = npf.irr(cash_flows)
+    
+    # Calculate additional metrics
+    win_rate, sharpe_ratio, max_drawdown = calculate_metrics(
+        strategy,
+        initial_portfolio_value=initial_portfolio_value,
+        final_portfolio_value=cerebro.broker.getvalue(), stock_data=stock_data, cash_flows=cash_flows
+    )
 
     # Check if the file exists
     csv_trade_log = f'static/files/trade_log_{strategy_name}.csv'
@@ -94,7 +107,7 @@ def backtest():
     if os.path.exists(graph_img):
         with open(csv_robustness, "rb") as f:
             encoded_robustness_logs = base64.b64encode(f.read()).decode('utf-8')
-        
+
     backtest_results = {
         "Strategy name": strategy_name,
         "Start Date": start_date,
@@ -102,6 +115,10 @@ def backtest():
         "Robustness Test": encoded_robustness_logs,
         "Trade Log": encoded_trade_log,
         "Graph Img": encoded_graph,
+        "Win Rate": win_rate,
+        "Sharpe Ratio": f"{sharpe_ratio:.2f}",
+        "Max Drawdown": f"{max_drawdown:.2f}%",
+        "IRR": f"{irr:.2f}",
     }
     end_time = time.time()
     print(f'Time Taken: {end_time - start_time}')
@@ -121,6 +138,9 @@ def execute_strategies():
     start_time = time.time()
     from components.fetch_data import fetch_stock_data
     from components.run_strategy import run_strategy
+    from components.save_cached_parameters import save_cached_parameters
+    from components.weekly_update_checker import needs_weekly_update, load_best_parameters
+    from components.daily_cycle import daily_cycle
     data = request.json
     print(data)
     initial_portfolio_value = data.get('initial_portfolio_value', 100000)
@@ -134,16 +154,60 @@ def execute_strategies():
     print(f'stock data: {stock_data}')
 
     master_results = [] # Initialize a master results list for all strategies
+
+    if needs_weekly_update():
+        print('🟢 Running weekly cycle...')
+        best_parameters_dict = {}
     
-    with concurrent.futures.ProcessPoolExecutor() as excutor:
-        futures = {
-            excutor.submit(
-                run_strategy, strategy, trade_size, data_feed, initial_portfolio_value, stock_data, start_date
-            ): strategy for strategy in strategy_tree
-        }
-        for future in concurrent.futures.as_completed(futures):
-            backtest_results = future.result()
-            master_results.append(backtest_results)
+        with concurrent.futures.    ProcessPoolExecutor() as excutor:
+            futures = {
+                excutor.submit(
+                    run_strategy, strategy, trade_size, data_feed, initial_portfolio_value, stock_data, start_date
+                ): strategy for strategy in strategy_tree
+            }
+            for future in concurrent.futures.as_completed(futures):
+                backtest_results = future.result()
+                master_results.append(backtest_results)
+
+                strategy_name = backtest_results.get('Strategy Name')
+                best_parameter = backtest_results.get('Best Parameters')
+                portfolio_value = backtest_results.get('Portfolio Value')
+
+                if strategy_name and best_parameter and portfolio_value:
+                    best_parameters_dict[strategy_name] = {
+                        "parameters": best_parameter,
+                        "portfolio_value": portfolio_value,
+                    }
+                else:
+                    print(f"⚠️ Warning: Missing values for {strategy_name}: Best Params={best_parameter}, Portfolio={portfolio_value}")
+
+    
+        save_cached_parameters({
+            'last_update': datetime.today().strftime("%Y-%m-%d"),
+            'best_parameters': best_parameters_dict
+        })
+        print("✅ Weekly best parameters saved successfully.")
+    else:
+        print('🟢 Running daily cycle...')
+        best_params = load_best_parameters()
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = {}
+    
+            for strategy_name in strategy_tree:
+                # Get the best parameters for the current strategy
+                strategy_params = best_params.get(strategy_name, {}).get("parameters", {})
+
+                futures[executor.submit(
+                    daily_cycle, strategy_name, trade_size, data_feed, initial_portfolio_value, stock_data, start_date, strategy_params
+                )] = strategy_name  # Store strategy_name for reference
+
+            for future in concurrent.futures.as_completed(futures):
+                strategy_name = futures[future]  # Retrieve strategy name for debugging
+                try:
+                    backtest_results = future.result()
+                    master_results.append(backtest_results)
+                except Exception as e:
+                    print(f"⚠️ Error in {strategy_name}: {e}")
     
     end_time = time.time()
     print(f'Time Taken: {end_time - start_time}')

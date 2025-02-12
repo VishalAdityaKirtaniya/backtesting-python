@@ -1,48 +1,10 @@
-import concurrent.futures
-import base64
-import os
 import backtrader as bt
-import pandas as pd
-import concurrent
 import numpy_financial as npf
-
-
-def run_strategy(strategy_name, trade_size, data_feed, initial_portfolio_value, stock_data, start_date):
-    from components.backtrader_sync import run_backtrader_sync
-    from components.parameter_combinations import get_parameter_combinations
-    from components.folder_name import UPLOAD_FOLDER
+import os
+import base64
+def daily_cycle(strategy_name, trade_size, data_feed, initial_portfolio_value, stock_data, start_date, filtered_params):
     from components.strategy_class import create_strategy_class
     from components.formulas import calculate_cash_flows, calculate_metrics
-
-    results = []
-    param_names, param_combinations = get_parameter_combinations(strategy_name)
-    valid_combinations = [
-        dict(zip(param_names, combo)) for combo in param_combinations if combo[0] > combo[1]
-    ]
-    for params in valid_combinations:
-        params['Trade Size'] = trade_size
-
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        futures = {
-            executor.submit(
-                run_backtrader_sync, data_feed, strategy_name, params, initial_portfolio_value
-            ): params for params in valid_combinations
-        }
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            results.append(result)
-
-    log_df = pd.DataFrame(results)
-    csv_robustness = f'robustness_test_{strategy_name}.csv'
-    csv_path = os.path.join(UPLOAD_FOLDER, csv_robustness)
-    log_df.to_csv(csv_path, index=False)
-
-    # Get best strategy
-    sorted_results = sorted(results, key=lambda x: float(x["Portfolio Value"]), reverse=True)
-    highest_result = sorted_results[0]
-    portfolio_value = highest_result['Portfolio Value'] 
-    exclude_keys = {"Win Rate", "Sharpe Ratio", "Max Drawdown", "IRR", "Portfolio Value"}
-    filtered_params = {key: value for key, value in highest_result.items() if key not in exclude_keys}
 
     # Backtest the best strategy
     cerebro = bt.Cerebro()
@@ -51,6 +13,7 @@ def run_strategy(strategy_name, trade_size, data_feed, initial_portfolio_value, 
     Graph = create_strategy_class(strategy_name=strategy_name, stop_logic='stop_logic')
     cerebro.addstrategy(Graph, params=filtered_params)
     strategy = cerebro.run()[0]
+    portfolio_value = cerebro.broker.getvalue()
 
     # Calculate cash flows
     cash_flows = calculate_cash_flows(strategy.log_data, initial_portfolio_value, stock_data)

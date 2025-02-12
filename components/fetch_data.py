@@ -17,6 +17,7 @@ def fetch_stock_data(stock_symbol, start_date, interval):
         print(f'Last date in the existing data: {last_date}')
         # Get today's date
         today_date = pd.to_datetime("today").normalize()
+        print(f'last date: {last_date}, today_date: {today_date}')
         if last_date != today_date:
             # Download new data from the last date to the present
             print(f"Downloading new data for {stock_symbol} from {last_date} to the current date")
@@ -29,6 +30,7 @@ def fetch_stock_data(stock_symbol, start_date, interval):
             # Append the new data
             stock_data = pd.concat([stock_data, new_data])
             print(f"Appended new data for {stock_symbol}")
+            stock_data.to_csv(csv_path, index=True) # Save to CSV for future use
         else:
             print(f"No new data available for {stock_symbol}.")
         

@@ -5,6 +5,7 @@ import base64
 def daily_cycle(strategy_name, trade_size, data_feed, initial_portfolio_value, stock_data, start_date, filtered_params):
     from components.strategy_class import create_strategy_class
     from components.formulas import calculate_cash_flows, calculate_metrics
+    from components.segregated_trades import segregate_trades
 
     # Backtest the best strategy
     cerebro = bt.Cerebro()
@@ -26,6 +27,8 @@ def daily_cycle(strategy_name, trade_size, data_feed, initial_portfolio_value, s
         initial_portfolio_value=initial_portfolio_value,
         final_portfolio_value=cerebro.broker.getvalue(), stock_data=stock_data, cash_flows=cash_flows
     )
+
+    segregated_trades = segregate_trades(strategy.log_data)
 
     # Check if the file exists
     csv_trade_log = f'static/files/trade_log_{strategy_name}.csv'
@@ -58,5 +61,6 @@ def daily_cycle(strategy_name, trade_size, data_feed, initial_portfolio_value, s
         "IRR": f"{irr:.2f}",
         "Portfolio Value": portfolio_value,
         "Best Parameters": filtered_params,
+        "Segregated Trades": segregated_trades
     }
     return backtest_results

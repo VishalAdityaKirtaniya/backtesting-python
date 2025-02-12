@@ -13,6 +13,7 @@ def run_strategy(strategy_name, trade_size, data_feed, initial_portfolio_value, 
     from components.folder_name import UPLOAD_FOLDER
     from components.strategy_class import create_strategy_class
     from components.formulas import calculate_cash_flows, calculate_metrics
+    from components.segregated_trades import segregate_trades
 
     results = []
     param_names, param_combinations = get_parameter_combinations(strategy_name)
@@ -64,6 +65,8 @@ def run_strategy(strategy_name, trade_size, data_feed, initial_portfolio_value, 
         final_portfolio_value=cerebro.broker.getvalue(), stock_data=stock_data, cash_flows=cash_flows
     )
 
+    segregated_trades = segregate_trades(strategy.log_data)
+
     # Check if the file exists
     csv_trade_log = f'static/files/trade_log_{strategy_name}.csv'
     if os.path.exists(csv_trade_log):
@@ -95,5 +98,6 @@ def run_strategy(strategy_name, trade_size, data_feed, initial_portfolio_value, 
         "IRR": f"{irr:.2f}",
         "Portfolio Value": portfolio_value,
         "Best Parameters": filtered_params,
+        "Segregated Trades": segregated_trades
     }
     return backtest_results

@@ -65,7 +65,7 @@ def macd_stop_logic(self):
         {'Date': entry['Date'], 'MACD': entry['MACD']} 
         for entry in self.macd_signals if entry['Type'] == 'SELL'
     ])
-    print(f"sell signal: {sell_signals_macd}")
+    # print(f"sell signal: {sell_signals_macd}")
 
     # print(f"buy signal macd: {buy_signals_macd}")
     plt.figure(figsize=(12, 6))

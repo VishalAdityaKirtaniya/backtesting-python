@@ -159,7 +159,7 @@ def execute_strategies():
         print('🟢 Running weekly cycle...')
         best_parameters_dict = {}
     
-        with concurrent.futures.    ProcessPoolExecutor() as excutor:
+        with concurrent.futures.ProcessPoolExecutor() as excutor:
             futures = {
                 excutor.submit(
                     run_strategy, strategy, trade_size, data_feed, initial_portfolio_value, stock_data, start_date

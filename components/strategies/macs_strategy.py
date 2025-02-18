@@ -16,6 +16,9 @@ macs_parameter_ranges = {
     "Short Term": range(10, 81, 5)
 }
 # MACS strategy
+def macs_init_logic(self):
+    self.pre_buy_sell_alert = []
+
 def macs_indicators(self):
         # Initialize moving averages
         self.short_ma = bt.indicators.SMA(self.data.close, period=self.params["Short Term"])
@@ -25,13 +28,27 @@ def macs_indicators(self):
         self.crossover = bt.indicators.CrossOver(self.short_ma, self.long_ma)
 
 def macs_next_logic(self):
-        
-        # Buy condition: Short MA crosses above Long MA
+        short_ma = self.short_ma[0]
+        long_ma = self.long_ma[0]
+        prev_short_ma = self.short_ma[-1]
+        prev_long_ma = self.long_ma[-1]
+
+        # Pre-Buy Alert: Short MA is approaching a crossover above Long MA
+        if prev_short_ma < prev_long_ma and short_ma > long_ma * 0.98 and short_ma < long_ma:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+
+        # Buy Condition: Short MA crosses above Long MA
         if self.crossover > 0:
+            # print(f"Buy Signal: Short MA ({short_ma}) crossed above Long MA ({long_ma})")
             self.order = self.buy(size=self.params["Trade Size"])
 
-        # Sell condition: Short MA crosses below Long MA
+        # Pre-Sell Alert: Short MA is approaching a crossover below Long MA
+        if prev_short_ma > prev_long_ma and short_ma < long_ma * 1.02 and short_ma > long_ma:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
+
+        # Sell Condition: Short MA crosses below Long MA
         elif self.crossover < 0 and self.position:
+            # print(f"Sell Signal: Short MA ({short_ma}) crossed below Long MA ({long_ma})")
             self.order = self.sell(size=self.position.size)
 
 def macs_stop_logic(self):

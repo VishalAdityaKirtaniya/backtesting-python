@@ -18,22 +18,36 @@ rsi_parameter_ranges = {
 
 def rsi_init_logic(self):
     self.rsi_signal = []
+    self.pre_buy_sell_alert = []
 
 def rsi_indicators(self):
     self.rsi = bt.indicators.RSI(self.data.close, period=self.params["RSI Period"])
 
 def rsi_next_logic(self):
-    # Check if we are in position
-    if not self.position:
-        # Buy condition: RSI crosses below the lower threshold
-        if self.rsi < self.params["Oversold"]:
-            self.order = self.buy(size=self.params["Trade Size"])
-            self.rsi_signal.append({'Date': self.datas[0].datetime.date(0), 'Type': 'BUY', 'RSI': self.rsi[0]})
-    else:
-        # Sell condition: RSI crosses above the upper threshold
-        if self.rsi > self.params["Overbought"]:
-            self.order = self.sell(size=self.position.size)
-            self.rsi_signal.append({'Date': self.datas[0].datetime.date(0), 'Type': 'SELL', 'RSI': self.rsi[0]})
+    rsi = self.rsi[0]
+    prev_rsi = self.rsi[-1]
+    oversold = self.params["Oversold"]
+    overbought = self.params["Overbought"]
+
+    # Pre-Buy Alert: RSI is approaching the oversold level
+    if prev_rsi > oversold and rsi <= oversold * 1.05 and rsi > oversold:
+        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+
+    # Buy Condition: RSI crosses below the oversold threshold
+    if not self.position and rsi < oversold:
+        # print(f"Buy Signal: RSI ({rsi}) crossed below {oversold}")
+        self.order = self.buy(size=self.params["Trade Size"])
+        self.rsi_signal.append({'Date': self.datas[0].datetime.date(0), 'Type': 'BUY', 'RSI': rsi})
+
+    # Pre-Sell Alert: RSI is approaching the overbought level
+    if prev_rsi < overbought and rsi >= overbought * 0.95 and rsi < overbought:
+        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
+
+    # Sell Condition: RSI crosses above the overbought threshold
+    elif self.position and rsi > overbought:
+        # print(f"Sell Signal: RSI ({rsi}) crossed above {overbought}")
+        self.order = self.sell(size=self.position.size)
+        self.rsi_signal.append({'Date': self.datas[0].datetime.date(0), 'Type': 'SELL', 'RSI': rsi})
 
 def rsi_stop_logic(self):
     data = pd.DataFrame({

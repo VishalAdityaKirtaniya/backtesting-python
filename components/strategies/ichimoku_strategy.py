@@ -16,6 +16,10 @@ ichimoku_parameter_ranges = {
      "Conversion Line Period": range(5, 16, 2),
      "Leading Span B Period": range(40, 100, 10)
 }
+
+def ichimoku_init_logic(self):
+    self.pre_buy_sell_alert = []
+
 def ichimoku_indicators(self):
         high = self.data.high
         low = self.data.low
@@ -37,13 +41,33 @@ def ichimoku_indicators(self):
                                     bt.indicators.Lowest(low, period=self.params["Leading Span B Period"])) / 2
 
 def ichimoku_next_logic(self):
-        # Buy if price is above Senkou Span A and Senkou Span B
-        if self.data.close[0] > self.lines.leading_span_a[0] and self.data.close[0] > self.lines.leading_span_b[0]:
+        price = self.data.close[0]
+        span_a = self.lines.leading_span_a[0]
+        span_b = self.lines.leading_span_b[0]
+        prev_price = self.data.close[-1]
+
+        # Determine upper and lower cloud boundaries
+        cloud_top = max(span_a, span_b)
+        cloud_bottom = min(span_a, span_b)
+
+        # Pre-Buy Alert: Price is approaching the cloud from below
+        if prev_price < cloud_bottom and price > cloud_bottom * 0.98 and price < cloud_bottom:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+
+        # Buy Condition: Price breaks above the cloud
+        if price > span_a and price > span_b:
             if not self.position:
+                # print(f"Buy Signal: Price ({price}) broke above the cloud ({cloud_top})")
                 self.order = self.buy(size=self.params["Trade Size"])
-        # Sell if price is below Senkou Span A and Senkou Span B
-        elif self.data.close[0] < self.lines.leading_span_a[0] and self.data.close[0] < self.lines.leading_span_b[0]:
+
+        # Pre-Sell Alert: Price is approaching the cloud from above
+        if prev_price > cloud_top and price < cloud_top * 1.02 and price > cloud_top:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
+
+        # Sell Condition: Price breaks below the cloud
+        elif price < span_a and price < span_b:
             if self.position:
+                # print(f"Sell Signal: Price ({price}) broke below the cloud ({cloud_bottom})")
                 self.order = self.sell(size=self.position.size)
 
 def ichimoku_stop_logic(self):

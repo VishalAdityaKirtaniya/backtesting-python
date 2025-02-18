@@ -22,6 +22,7 @@ def bollingerband_indicators(self):
 def bollingerband_init_logic(self):
     self.upper_band = []  # List for upper band values
     self.lower_band = []  # List for lower band values
+    self.pre_buy_sell_alert = []
 
 def bollingerband_next_logic(self):
         upper_band = self.bb.lines.top[0]  # Get the upper band value
@@ -32,13 +33,19 @@ def bollingerband_next_logic(self):
         self.upper_band.append(upper_band)  # Save upper band value
         self.lower_band.append(lower_band)  # Save lower band value
 
+        # Pre-Buy Alert (if price is within 2% of the lower band)
+        if close < lower_band * 1.02 and close > lower_band:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+
+
         # Buy for the first time if not in position and price crosses above upper band
         if close < lower_band: 
             self.order = self.buy(size=self.params["Trade Size"])
 
-        # After the first buy, check if price goes below upper band and then back up above it
-        # if self.data.close[-1] < self.upper_band[-1] and self.data.close[0] > self.upper_band[0]:
-        #     self.order = self.buy(size=self.params.trade_size)
+        # Pre-Sell Alert (if price is within 2% of the upper band)
+        if close > upper_band * 0.98 and close < upper_band:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
+
 
         # Optional Sell logic: Sell if price drops below the lower band
         elif self.position and close > upper_band:

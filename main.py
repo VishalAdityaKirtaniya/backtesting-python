@@ -136,11 +136,12 @@ def get_strategies():
 @app.route('/execute-strategies', methods=['POST'])
 def execute_strategies():
     start_time = time.time()
-    from components.fetch_data import fetch_stock_data
+    from components.fetch_data_v2 import fetch_stock_data
     from components.run_strategy import run_strategy
     from components.save_cached_parameters import save_cached_parameters
-    from components.weekly_update_checker import needs_weekly_update, load_best_parameters
+    from components.weekly_update_checker import needs_weekly_update
     from components.daily_cycle import daily_cycle
+    from components.databases import save_parameters_to_db, load_best_parameters
     data = request.json
     print(data)
     initial_portfolio_value = data.get('initial_portfolio_value', 100000)
@@ -157,7 +158,6 @@ def execute_strategies():
 
     if needs_weekly_update():
         print('🟢 Running weekly cycle...')
-        best_parameters_dict = {}
     
         with concurrent.futures.ProcessPoolExecutor() as excutor:
             futures = {
@@ -174,18 +174,10 @@ def execute_strategies():
                 portfolio_value = backtest_results.get('Portfolio Value')
 
                 if strategy_name and best_parameter and portfolio_value:
-                    best_parameters_dict[strategy_name] = {
-                        "parameters": best_parameter,
-                        "portfolio_value": portfolio_value,
-                    }
+                    save_parameters_to_db(strategy_name, best_parameter, portfolio_value)
                 else:
                     print(f"⚠️ Warning: Missing values for {strategy_name}: Best Params={best_parameter}, Portfolio={portfolio_value}")
 
-    
-        save_cached_parameters({
-            'last_update': datetime.today().strftime("%Y-%m-%d"),
-            'best_parameters': best_parameters_dict
-        })
         print("✅ Weekly best parameters saved successfully.")
     else:
         print('🟢 Running daily cycle...')

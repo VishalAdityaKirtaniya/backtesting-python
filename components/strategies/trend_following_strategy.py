@@ -15,6 +15,9 @@ trend_following_parameter_ranges = {
     "High Period": range(20, 101, 5),  # 20 to 50 with step of 5
     "Lower Period": range(10, 51, 5),  # 5 to 20 with step of 3
 }
+def trend_following_init_logic(self):
+    self.pre_buy_sell_alert = []
+
 def trend_following_indicators(self):
     # Upper Band: Highest high over the high_period
     self.upper_band = bt.ind.Highest(self.data.high, period=self.params["High Period"])
@@ -30,16 +33,22 @@ def trend_following_next_logic(self):
         close = self.data.close[0]
         close_yesterday = self.data.close[-1]
 
-        # Buy for the first time if not in position and price crosses above upper band
+        # Pre-Buy Alert: Price is approaching the Upper Band
+        if close_yesterday < upper_band and close >= upper_band * 0.98 and close < upper_band:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+
+        # Buy Condition: Price crosses above the Upper Band
         if close > upper_band and close_yesterday <= upper_band: 
+            # print(f"Buy Signal: Price ({close}) crossed above Upper Band ({upper_band})")
             self.order = self.buy(size=self.params["Trade Size"])
 
-        # After the first buy, check if price goes below upper band and then back up above it
-        # if self.data.close[-1] < self.upper_band[-1] and self.data.close[0] > self.upper_band[0]:
-        #     self.order = self.buy(size=self.params.trade_size)
+        # Pre-Sell Alert: Price is approaching the Lower Band
+        if close_yesterday > lower_band and close <= lower_band * 1.02 and close > lower_band:
+            self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
 
-        # Optional Sell logic: Sell if price drops below the lower band
+        # Sell Condition: Price crosses below the Lower Band
         elif self.position and close < lower_band and close_yesterday >= lower_band:
+            # print(f"Sell Signal: Price ({close}) crossed below Lower Band ({lower_band})")
             self.order = self.sell(size=self.position.size)
 
 def trend_following_stop_logic(self):

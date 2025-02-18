@@ -18,19 +18,35 @@ parabolic_sar_parameter_ranges = {
 
 def parabolic_sar_init_logic(self):
     self.sar_values = []
+    self.pre_buy_sell_alert = []
 
 def parabolic_sar_indicators(self):
     self.sar = bt.indicators.ParabolicSAR(self.data, af=self.params["Acceleration Factor Period"], afmax=self.params["Maximum Acceleration Factor Period"])
 
 def parabolic_sar_next_logic(self):
     self.sar_values.append(self.sar[0])
+    price = self.data.close[0]
+    prev_price = self.data.close[-1]
+    sar = self.sar[0]
 
+    # Pre-Buy Alert: Price is approaching the SAR from below
+    if prev_price < sar and price > sar * 0.98 and price < sar:
+        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+
+    # Buy Condition: Price crosses above SAR
     if not self.position:
-        if self.data.close[0] > self.sar[0]:
+        if price > sar:
+            # print(f"Buy Signal: Price ({price}) crossed above SAR ({sar})")
             self.order = self.buy(size=self.params["Trade Size"])
-    else:
-        if self.data.close[0] < self.sar[0] and self.position:
-            self.order = self.sell(size=self.position.size)
+
+    # Pre-Sell Alert: Price is approaching the SAR from above
+    if prev_price > sar and price < sar * 1.02 and price > sar:
+        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
+
+    # Sell Condition: Price crosses below SAR
+    elif price < sar and self.position:
+        # print(f"Sell Signal: Price ({price}) crossed below SAR ({sar})")
+        self.order = self.sell(size=self.position.size)
 
 def parabolic_sar_stop_logic(self):
     data = pd.DataFrame({

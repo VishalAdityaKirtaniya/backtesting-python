@@ -61,6 +61,7 @@ def daily_cycle(strategy_name, trade_size, data_feed, initial_portfolio_value, s
         "IRR": f"{irr:.2f}",
         "Portfolio Value": portfolio_value,
         "Best Parameters": filtered_params,
-        "Segregated Trades": segregated_trades
+        "Segregated Trades": segregated_trades,
+        "Pre Buy/Sell Indicator": strategy.pre_buy_sell_alert
     }
     return backtest_results

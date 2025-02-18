@@ -23,6 +23,7 @@ def stochastic_init_logic(self):
     self.stochastic_sell = []
     self.stochastic_line = []
     self.signal_line = []
+    self.pre_buy_sell_alert = []
 
 
 def stochastic_indicators(self):
@@ -36,31 +37,42 @@ def stochastic_indicators(self):
 def stochastic_next_logic(self):
     stochastic_line = self.stochastic.percK[0]
     signal_line = self.stochastic.percD[0]
+    prev_stochastic = self.stochastic.percK[-1]
+    prev_signal = self.stochastic.percD[-1]
+    
+    oversold = self.params['Oversold']
+    overbought = self.params['Overbought']
     
     self.stochastic_line.append(stochastic_line)
     self.signal_line.append(signal_line)
 
-    # Buy signal: %K crosses above %D in the oversold region
-    if stochastic_line > signal_line and stochastic_line < self.params['Oversold'] and self.stochastic.percK[-1] < self.stochastic.percD[-1] :
+    # Pre-Buy Alert: %K is approaching the oversold level
+    if prev_stochastic > oversold and stochastic_line <= oversold * 1.05 and stochastic_line > oversold:
+        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+
+    # Buy Signal: %K crosses above %D in the oversold region
+    if stochastic_line > signal_line and stochastic_line < oversold and prev_stochastic < prev_signal:
+        # print(f"Buy Signal: Stochastic %K ({stochastic_line}) crossed above %D in the Oversold region")
         self.order = self.buy(size=self.params["Trade Size"])
         self.stochastic_buy.append({
             'Date': self.datas[0].datetime.date(0), 
             'Type': 'BUY', 
             'Stochastic': stochastic_line
         })
-        
-    # Sell signal: %K crosses below %D in the overbought region
-    else:
-        if stochastic_line < signal_line and stochastic_line > self.params['Overbought'] and self.stochastic.percK[-1] > self.stochastic.percD[-1]:
-            self.order = self.sell(size=self.position.size)
-            # print(f"Sell signal triggered: {stochastic_line}, {signal_line}")  # Debug log
-            self.stochastic_sell.append({
-                'Date': self.datas[0].datetime.date(0), 
-                'Type': 'SELL',
-                'Stochastic': stochastic_line
-            })
 
-    # print(f'stochastic_sell_next: {self.stochastic_sell}')
+    # Pre-Sell Alert: %K is approaching the overbought level
+    if prev_stochastic < overbought and stochastic_line >= overbought * 0.95 and stochastic_line < overbought:
+        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
+
+    # Sell Signal: %K crosses below %D in the overbought region
+    elif stochastic_line < signal_line and stochastic_line > overbought and prev_stochastic > prev_signal:
+        # print(f"Sell Signal: Stochastic %K ({stochastic_line}) crossed below %D in the Overbought region")
+        self.order = self.sell(size=self.position.size)
+        self.stochastic_sell.append({
+            'Date': self.datas[0].datetime.date(0), 
+            'Type': 'SELL',
+            'Stochastic': stochastic_line
+        })
 
 def stochastic_stop_logic(self):
     data = pd.DataFrame({

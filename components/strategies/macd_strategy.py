@@ -41,17 +41,17 @@ def macd_next_logic(self):
 
     # Pre-Buy Alert: MACD is very close to crossing above the signal line
     if prev_macd < prev_signal and macd > signal * 0.98 and macd < signal:
+        
         self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE BUY'})
+    # Pre-Sell Alert: MACD is very close to crossing below the signal line
+    if prev_macd > prev_signal and macd < signal * 1.02 and macd > signal:
+        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
 
     # Buy Trigger: MACD crosses above signal line from below and is negative
     if macd > signal and prev_macd <= prev_signal and macd < 0:
         # print(f"Buy Signal: MACD ({macd}) crossed above Signal ({signal})")
         self.order = self.buy(size=self.params["Trade Size"])
         self.macd_signals.append({'Date': self.datas[0].datetime.date(0), 'Type': 'BUY', 'MACD': macd})
-
-    # Pre-Sell Alert: MACD is very close to crossing below the signal line
-    if prev_macd > prev_signal and macd < signal * 1.02 and macd > signal:
-        self.pre_buy_sell_alert.append({'Date': self.datas[0].datetime.date(0), 'Type': 'PRE SELL'})
 
     # Sell Trigger: MACD crosses below signal line from above and is positive
     elif self.position and macd < signal and prev_macd >= prev_signal and macd > 0:

@@ -14,14 +14,17 @@ def fetch_stock_data(stock_symbol, start_date, interval):
 
     if last_date:
         today_date = pd.to_datetime("today").normalize()
+        print(f'today_date: {today_date}')
 
         # ✅ If data is already up-to-date, return existing data
-        if last_date >= today_date - pd.Timedelta(days=1):
+        if last_date >= today_date:
+            print(f'last_date : {last_date}')
             print(f"Stock data for {stock_symbol} is already up-to-date.")
             return fetch_stock_data_from_db(stock_symbol)  # Fetch from the database
 
         # ✅ If data is outdated, fetch only new records
         start_fetch_date = last_date + pd.Timedelta(days=1)
+        print(f'start_fetch-date : {start_fetch_date}')
         print(f"Fetching new data for {stock_symbol} from {start_fetch_date} onwards")
     else:
         # ✅ If no data exists, fetch from the given start_date

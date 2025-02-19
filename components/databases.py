@@ -69,6 +69,8 @@ def save_parameters_to_db(strategy_name, best_parameter, portfolio_value):
             VALUES (%s)
             ON DUPLICATE KEY UPDATE update_date=update_date
         """, (update_date,))
+
+        strategy_id = get_or_create_strategy(strategy_name)
         
         # Get the metadata_id of the inserted update_date (whether it's new or existing)
         cursor.execute("SELECT id FROM weekly_metadata WHERE update_date = %s", (update_date,))
@@ -76,10 +78,10 @@ def save_parameters_to_db(strategy_name, best_parameter, portfolio_value):
 
         # Step 2: Insert the strategy data into weekly_parameters
         cursor.execute("""
-            INSERT INTO weekly_parameters (metadata_id, strategy_name, parameters, portfolio_value)
+            INSERT INTO weekly_parameters (metadata_id, strategy_id, parameters, portfolio_value)
             VALUES (%s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE parameters = %s, portfolio_value = %s
-        """, (metadata_id, strategy_name, json.dumps(best_parameter), portfolio_value, json.dumps(best_parameter), portfolio_value))
+        """, (metadata_id, strategy_id, json.dumps(best_parameter), portfolio_value, json.dumps(best_parameter), portfolio_value))
         
         # Commit the changes
         conn.commit()
@@ -125,9 +127,10 @@ def load_best_parameters():
 
         # Step 4: Get the strategy parameters from the weekly_parameters table based on metadata_id
         cursor.execute("""
-            SELECT strategy_name, parameters, portfolio_value 
-            FROM weekly_parameters 
-            WHERE metadata_id = %s
+            SELECT sl.name AS strategy_name, wp.parameters, wp.portfolio_value 
+            FROM weekly_parameters wp
+            JOIN strategy_list sl ON wp.strategy_id = sl.id  -- Join to get strategy names
+            WHERE wp.metadata_id = %s
         """, (metadata_id,))
 
         # Fetch all strategy parameters
@@ -180,5 +183,84 @@ def needs_weekly_update():
     
     finally:
         # Step 5: Close the database connection
+        cursor.close()
+        conn.close()
+
+def get_or_create_strategy(strategy_name):
+    """Gets the strategy ID if it exists, otherwise inserts and returns the new ID."""
+    conn = get_db_connection()  # Connect to database
+    cursor = conn.cursor()
+
+    # Check if strategy exists
+    cursor.execute("SELECT id FROM strategy_list WHERE name = %s", (strategy_name,))
+    result = cursor.fetchone()
+
+    if result:
+        strategy_id = result[0]
+    else:
+        # Insert new strategy and get its ID
+        cursor.execute("INSERT INTO strategy_list (name) VALUES (%s)", (strategy_name,))
+        strategy_id = cursor.lastrowid  # Get the ID of the new strategy
+        conn.commit()
+
+    conn.close()
+    return strategy_id  # Return strategy ID
+
+def insert_trade_logs(strategy_name, log_data):
+    """
+    Inserts multiple trade logs into the trade_logs table.
+    
+    Parameters:
+    - strategy_name (str): Name of the trading strategy.
+    - log_data (list of dict): List of trade logs with keys ['Date', 'Type', 'Price', 'Size', 'Portfolio Value'].
+    """
+    if not log_data:
+        print("⚠️ No trade logs to insert.")
+        return
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Get or create the strategy ID
+        strategy_id = get_or_create_strategy(strategy_name)
+
+        # Define the table name dynamically
+        table_name = f"trade_logs_{strategy_name}"  # Replace spaces with underscores
+
+        # Create table only if it doesn't exist
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS {table_name} (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                trade_date DATE NOT NULL,
+                trade_type ENUM('BUY', 'SELL') NOT NULL,
+                price DECIMAL(10, 2) NOT NULL,
+                size INT NOT NULL,
+                portfolio_value DECIMAL(15, 2) NOT NULL
+            )
+        """)
+        conn.commit()
+
+        # Prepare the data for bulk insertion
+        trade_values = [
+            (trade['Date'], trade['Type'], trade['Price'], trade['Size'], trade['Portfolio Value'])
+            for trade in log_data
+        ]
+
+        # Bulk insert trade logs
+        cursor.executemany(f"""
+            INSERT INTO `{table_name}` (trade_date, trade_type, price, size, portfolio_value)
+            VALUES (%s, %s, %s, %s, %s)
+        """, trade_values)
+
+        # Commit the transaction
+        conn.commit()
+        print(f"✅ {len(trade_values)} trade logs inserted successfully for strategy: {strategy_name}")
+
+    except mysql.connector.Error as err:
+        print(f"⚠️ Error inserting trade logs: {err}")
+        conn.rollback()
+
+    finally:
         cursor.close()
         conn.close()

@@ -138,7 +138,6 @@ def execute_strategies():
     start_time = time.time()
     from components.fetch_data_v2 import fetch_stock_data
     from components.run_strategy import run_strategy
-    from components.save_cached_parameters import save_cached_parameters
     from components.weekly_update_checker import needs_weekly_update
     from components.daily_cycle import daily_cycle
     from components.databases import save_parameters_to_db, load_best_parameters

@@ -14,6 +14,7 @@ def run_strategy(strategy_name, trade_size, data_feed, initial_portfolio_value, 
     from components.strategy_class import create_strategy_class
     from components.formulas import calculate_cash_flows, calculate_metrics
     from components.segregated_trades import segregate_trades
+    from components.databases import insert_trade_logs
 
     results = []
     param_names, param_combinations = get_parameter_combinations(strategy_name)
@@ -53,6 +54,7 @@ def run_strategy(strategy_name, trade_size, data_feed, initial_portfolio_value, 
     cerebro.addstrategy(Graph, params=filtered_params)
     strategy = cerebro.run()[0]
 
+    insert_trade_logs(strategy_name, strategy.log_data) # store the trade_logs into the database
     # Calculate cash flows
     cash_flows = calculate_cash_flows(strategy.log_data, initial_portfolio_value, stock_data)
     # print(f"Cash flow: {cash_flows}")

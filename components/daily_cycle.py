@@ -6,6 +6,7 @@ def daily_cycle(strategy_name, trade_size, data_feed, initial_portfolio_value, s
     from components.strategy_class import create_strategy_class
     from components.formulas import calculate_cash_flows, calculate_metrics
     from components.segregated_trades import segregate_trades
+    from components.databases import insert_trade_logs
 
     # Backtest the best strategy
     cerebro = bt.Cerebro()
@@ -16,6 +17,7 @@ def daily_cycle(strategy_name, trade_size, data_feed, initial_portfolio_value, s
     strategy = cerebro.run()[0]
     portfolio_value = cerebro.broker.getvalue()
 
+    insert_trade_logs(strategy_name, strategy.log_data) # store the trade_logs into the databases
     # Calculate cash flows
     cash_flows = calculate_cash_flows(strategy.log_data, initial_portfolio_value, stock_data)
     # print(f"Cash flow: {cash_flows}")
